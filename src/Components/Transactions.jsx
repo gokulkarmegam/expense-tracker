@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { FaRupeeSign } from 'react-icons/fa';
 import { FiTrash2, FiEdit2 } from 'react-icons/fi';
 
-const Transaction = ({ transactions, deleteTransaction, updateTransaction, categories }) => {
+const Transaction = ({ 
+  transactions = [], 
+  deleteTransaction, 
+  updateTransaction, 
+  categories = [] 
+}) => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({
     type: '',
@@ -10,22 +15,26 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
     amount: ''
   });
 
-  const incomeCategories = categories.filter(cat => cat.type === 'income');
-  const expenseCategories = categories.filter(cat => cat.type === 'expense');
+  const incomeCategories = categories?.filter(cat => cat?.type === 'income') || [];
+  const expenseCategories = categories?.filter(cat => cat?.type === 'expense') || [];
+
+  const hasTransactions = transactions?.length > 0;
 
   const handleEdit = (transaction) => {
-    setEditingId(transaction.id);
+    setEditingId(transaction?.id);
     setEditData({
-      type: transaction.type,
-      category: transaction.category,
-      amount: transaction.amount
+      type: transaction?.type || '',
+      category: transaction?.category || '',
+      amount: transaction?.amount || ''
     });
   };
 
   const handleUpdate = (e) => {
     e.preventDefault();
-    updateTransaction(editingId, editData);
-    setEditingId(null);
+    if (editingId) {
+      updateTransaction(editingId, editData);
+      setEditingId(null);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -36,7 +45,7 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
       
-      {transactions.length === 0 ? (
+      {!hasTransactions ? (
         <p className="text-gray-500">No transactions yet</p>
       ) : (
         <div className="overflow-x-auto">
@@ -51,9 +60,9 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  {editingId === transaction.id ? (
+              {transactions.map(transaction => (
+                <tr key={transaction?.id}>
+                  {editingId === transaction?.id ? (
                     <>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
@@ -73,7 +82,7 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
                         >
                           <option value="">Select Category</option>
                           {(editData.type === 'income' ? incomeCategories : expenseCategories).map(cat => (
-                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                            <option key={cat?.id} value={cat?.name}>{cat?.name}</option>
                           ))}
                         </select>
                       </td>
@@ -91,7 +100,7 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {transaction.date}
+                        {transaction?.date}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex space-x-2">
@@ -114,24 +123,24 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
                     <>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          transaction.type === 'income' 
+                          transaction?.type === 'income' 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {transaction.type}
+                          {transaction?.type}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {transaction.category}
+                        {transaction?.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }">
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                        transaction?.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      }`}>
                         <FaRupeeSign className="inline mr-1" />
-                        {parseFloat(transaction.amount).toFixed(2)}
+                        {parseFloat(transaction?.amount || 0).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {transaction.date}
+                        {transaction?.date}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
@@ -142,7 +151,7 @@ const Transaction = ({ transactions, deleteTransaction, updateTransaction, categ
                             <FiEdit2 />
                           </button>
                           <button
-                            onClick={() => deleteTransaction(transaction.id)}
+                            onClick={() => deleteTransaction(transaction?.id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             <FiTrash2 />

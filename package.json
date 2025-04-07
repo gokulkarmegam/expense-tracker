@@ -1,5 +1,5 @@
 {
-  "homepage": "https://github.com/gokulkarmegam/expense-tracker",
+  "homepage": "https://gokulkarmegam.github.io/expense-tracker",
   "name": "expense-tracker",
   "private": true,
   "version": "0.0.0",
@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-  "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "serve": "serve dist -p 3000"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.17",

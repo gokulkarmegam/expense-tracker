@@ -5,49 +5,37 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const INCOME_COLORS = ['#83f28f', '#5cd86c', '#3bbf4a', '#1da62e', '#0c8c1c'];
 const EXPENSE_COLORS = ['#ff6961', '#e8534b', '#d13d36', '#b82620', '#9e0f0b'];
 
-const Chart = ({ transactions, categories }) => {
+const Chart = ({ transactions = [], categories = [] }) => {
   const [chartType, setChartType] = useState('type');
 
-  // Calculate totals
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  // Safe calculations with null checks
+  const totalIncome = (transactions || [])
+    .filter(t => t?.type === 'income')
+    .reduce((sum, t) => sum + (parseFloat(t?.amount) || 0), 0);
   
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  const totalExpense = (transactions || [])
+    .filter(t => t?.type === 'expense')
+    .reduce((sum, t) => sum + (parseFloat(t?.amount) || 0), 0);
   
   const balance = totalIncome - totalExpense;
 
-  // Prepare data for bar chart (income vs expense vs balance)
+  // Prepare data for bar chart
   const typeData = [
-    {
-      name: 'Income',
-      amount: totalIncome,
-    },
-    {
-      name: 'Expense',
-      amount: totalExpense,
-    },
-    {
-      name: 'Balance',
-      amount: balance,
-    },
+    { name: 'Income', amount: totalIncome },
+    { name: 'Expense', amount: totalExpense },
+    { name: 'Balance', amount: balance }
   ];
 
-  // Prepare data for pie chart (by category)
+  // Safe category data preparation
   const getCategoryData = (type) => {
-    const filteredCategories = categories.filter(cat => cat.type === type);
+    const filteredCategories = (categories || []).filter(cat => cat?.type === type);
     
     return filteredCategories.map(cat => {
-      const total = transactions
-        .filter(t => t.type === type && t.category === cat.name)
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      const total = (transactions || [])
+        .filter(t => t?.type === type && t?.category === cat?.name)
+        .reduce((sum, t) => sum + (parseFloat(t?.amount) || 0), 0);
       
-      return {
-        name: cat.name,
-        value: total,
-      };
+      return { name: cat?.name, value: total };
     }).filter(item => item.value > 0);
   };
 
@@ -78,25 +66,20 @@ const Chart = ({ transactions, categories }) => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip 
-                formatter={(value) => [`${value.toFixed(2)}`, 'Amount']}
-              />
+              <Tooltip formatter={(value) => [`${value.toFixed(2)}`, 'Amount']} />
               <Legend />
               <Bar 
                 dataKey="amount" 
                 name="Amount"
                 shape={({ x, y, width, height, name }) => {
-                  let fillColor;
-                  if (name === 'Income') fillColor = '#1fd655'; // Green for income
-                  else if (name === 'Expense') fillColor = '#ff2c2c'; // Red for expense
-                  else fillColor = '#3b82f6'; // Blue for balance
-                  
+                  const fillColor = name === 'Income' ? '#1fd655' : 
+                                 name === 'Expense' ? '#ff2c2c' : '#3b82f6';
                   return <rect x={x} y={y} width={width} height={height} fill={fillColor} rx={2} />;
                 }}
               />
             </BarChart>
           </ResponsiveContainer>
-        ) : chartType === 'income' ? (
+        ) : chartType === 'income' && incomeCategoryData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -105,23 +88,17 @@ const Chart = ({ transactions, categories }) => {
                 cy="50%"
                 labelLine={false}
                 outerRadius={80}
-                fill="#83f28f"
                 dataKey="value"
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
                 {incomeCategoryData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={INCOME_COLORS[index % INCOME_COLORS.length]} 
-                  />
+                  <Cell key={`cell-${index}`} fill={INCOME_COLORS[index % INCOME_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                formatter={(value) => [`${value.toFixed(2)}`, 'Amount']}
-              />
+              <Tooltip formatter={(value) => [`${value.toFixed(2)}`, 'Amount']} />
             </PieChart>
           </ResponsiveContainer>
-        ) : (
+        ) : chartType === 'expense' && expenseCategoryData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -130,22 +107,20 @@ const Chart = ({ transactions, categories }) => {
                 cy="50%"
                 labelLine={false}
                 outerRadius={80}
-                fill="#ff6961"
                 dataKey="value"
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
                 {expenseCategoryData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} 
-                  />
+                  <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[index % EXPENSE_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                formatter={(value) => [`${value.toFixed(2)}`, 'Amount']}
-              />
+              <Tooltip formatter={(value) => [`${value.toFixed(2)}`, 'Amount']} />
             </PieChart>
           </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">No data available for this view</p>
+          </div>
         )}
       </div>
     </div>
