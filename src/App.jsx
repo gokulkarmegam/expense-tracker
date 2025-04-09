@@ -1,64 +1,62 @@
-import { useState, useEffect } from "react";
+import useLocalStorage from "./useLocalStorage";
 import IncomeExpense from "./Components/IncomeExpense";
 import ChartSection from "./Components/Charts";
 import Transactions from "./Components/Transactions";
-import Categories from "./Components/Categories";
+
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: "Salary", type: "income" },
+  { id: 2, name: "Freelance", type: "income" },
+  { id: 3, name: "Food", type: "expense" },
+  { id: 4, name: "Transport", type: "expense" },
+];
 
 function App() {
-  const [transactions, setTransactions] = useState([]);
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Salary", type: "income" },
-    { id: 2, name: "Freelance", type: "income" },
-    { id: 3, name: "Food", type: "expense" },
-    { id: 4, name: "Transport", type: "expense" },
-  ]);
-
-  // Load data from localStorage
-  useEffect(() => {
-    const savedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
-    const savedCategories = JSON.parse(localStorage.getItem("categories")) || categories;
-    setTransactions(savedTransactions);
-    setCategories(savedCategories);
-  }, []);
-
-  // Save data to localStorage
-  useEffect(() => {
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
-
-  useEffect(() => {
-    localStorage.setItem("categories", JSON.stringify(categories));
-  }, [categories]);
+  const [transactions, setTransactions] = useLocalStorage("transactions", []);
+  const [categories, setCategories] = useLocalStorage("categories", DEFAULT_CATEGORIES);
 
   const addTransaction = (transaction) => {
-    const newTransaction = {
-      ...transaction,
-      id: Date.now(),
-      date: new Date().toLocaleString(),
-    };
-    setTransactions([...transactions, newTransaction]);
-  };
-
-  const addCategory = (category) => {
-    const newCategory = {
-      ...category,
-      id: Date.now(),
-    };
-    setCategories([...categories, newCategory]);
-  };
-
-  const deleteTransaction = (id) => {
-    setTransactions(transactions.filter(transaction => transaction.id !== id));
-  };
-
-  const deleteCategory = (id) => {
-    setCategories(categories.filter(category => category.id !== id));
+    setTransactions((prev) => [
+      ...prev,
+      {
+        ...transaction,
+        id: Date.now(),
+        date: new Date().toLocaleString(),
+      },
+    ]);
   };
 
   const updateTransaction = (id, updatedTransaction) => {
-    setTransactions(transactions.map(transaction => 
-      transaction.id === id ? { ...transaction, ...updatedTransaction } : transaction
-    ));
+    setTransactions((prev) =>
+      prev.map((transaction) =>
+        transaction.id === id ? { ...transaction, ...updatedTransaction } : transaction
+      )
+    );
+  };
+
+  const deleteTransaction = (id) => {
+    setTransactions((prev) => prev.filter((transaction) => transaction.id !== id));
+  };
+
+  const addCategory = (category) => {
+    setCategories((prev) => [
+      ...prev,
+      {
+        ...category,
+        id: Date.now(),
+      },
+    ]);
+  };
+
+  const deleteCategory = (id) => {
+    const deletedCategory = categories.find((c) => c.id === id);
+    if (deletedCategory) {
+      setCategories((prev) => prev.filter((category) => category.id !== id));
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.category === deletedCategory.name ? { ...t, category: "" } : t
+        )
+      );
+    }
   };
 
   return (
@@ -69,20 +67,16 @@ function App() {
           categories={categories}
           addTransaction={addTransaction}
           addCategory={addCategory}
+          deleteCategory={deleteCategory}
         />
         <ChartSection transactions={transactions} categories={categories} />
       </div>
-      
+
       <Transactions
         transactions={transactions}
         deleteTransaction={deleteTransaction}
         updateTransaction={updateTransaction}
         categories={categories}
-      />
-      
-      <Categories
-        categories={categories}
-        deleteCategory={deleteCategory}
       />
     </div>
   );
